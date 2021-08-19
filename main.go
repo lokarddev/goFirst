@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -59,6 +60,7 @@ func getUsers(c *gin.Context) {
 
 		}
 	}(db)
+
 	var users []UserInfo
 	rows, err := db.Query("select * from userinfo")
 	if err != nil {
@@ -85,14 +87,14 @@ func postUsers(c *gin.Context) {
 	}(db)
 
 	var newUsers []UserInfo
-	js, err1 := c.GetRawData()
-	if err1 != nil {
-		return
-	}
-	err := json.Unmarshal(js, &newUsers)
+
+	body := c.Request.Body
+	x, _ := ioutil.ReadAll(body)
+	err := json.Unmarshal(x, &newUsers)
 	if err != nil {
 		return
 	}
+	fmt.Println(newUsers)
 
 	err = c.BindJSON(&newUsers)
 	if err != nil {
