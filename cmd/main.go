@@ -1,19 +1,41 @@
 package main
 
 import (
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"goFirst"
 	"goFirst/pkg/handler"
 	"goFirst/pkg/repository"
 	"goFirst/pkg/service"
 	"log"
+	"os"
 )
 
 func main() {
+	logrus.SetFormatter(new(logrus.JSONFormatter))
 	if err := initConfig(); err != nil {
-		log.Fatalf("error while configuring")
+		logrus.Fatalf("error while configuring")
 	}
-	repos := repository.NewRepository()
+
+	if err := godotenv.Load(); err != nil {
+		logrus.Fatalf("erro hwile loading env, %s", err.Error())
+	}
+
+	db, err := repository.NewPostgresDB(repository.Config{
+		Host:     viper.GetString("db.host"),
+		Port:     viper.GetString("db.port"),
+		Username: viper.GetString("db.username"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   viper.GetString("db.dbname"),
+		SSLMode:  viper.GetString("db.sslmode"),
+	})
+	if err != nil {
+		log.Fatalf("failed to initialize, %s", err)
+	}
+
+	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	handlers := handler.NewHandler(services)
 	srv := new(goFirst.Server)
