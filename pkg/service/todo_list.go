@@ -24,3 +24,14 @@ func (s *TodoListService) GetAll(userId int) ([]goFirst.TodoList, error) {
 func (s *TodoListService) GetById(userId, listId int) (goFirst.TodoList, error) {
 	return s.repo.GetById(userId, listId)
 }
+
+func (s *TodoListService) Delete(userId, listId int) error {
+	return s.repo.Delete(userId, listId)
+}
+
+func (s *TodoListService) Update(userId, listId int, input goFirst.UpdateListInput) error {
+	if err := input.Validate(); err != nil {
+		return err
+	}
+	return s.repo.Update(userId, listId, input)
+}
